@@ -32,8 +32,17 @@ class State {
 }
 
 int rotate(int pointer, Rotation rotation) {
-    int clicks = (rotation.count % 10) * (rotation.dir == Dir.LEFT ? 1 : -1);
-    return pointer + clicks;
+    return switch (rotation.dir) {
+        case RIGHT -> {
+            int c = rotation.count % 100;
+            int s = 100 - pointer;
+            yield c >= s ? c - s : pointer + c;
+        }
+        case LEFT -> {
+            int c = rotation.count % 100;
+            yield c > pointer ? 100 - (c - pointer) : pointer - c;
+        }
+    };
 }
 
 void main() throws IOException {
@@ -41,6 +50,10 @@ void main() throws IOException {
     rotations().forEach(r -> {
         var next = rotate(state.pointer, r);
         System.out.printf("moved from %d to %d\n", state.pointer, next);
+
+        assert next <= MAX_POINT;
+        assert next >= 0;
+
         if (next == 0) state.zeros++;
         state.pointer = next;
     });
