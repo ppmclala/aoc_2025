@@ -8,7 +8,7 @@ Pattern idDelimiter = Pattern.compile("([0-9]+)-([0-9]+)");
 
 Stream<IdRange> ranges() throws IOException {
     return rangeDelimiter
-        .splitAsStream(Files.readString(Path.of("sample.txt")))
+        .splitAsStream(Files.readString(Path.of("input.txt")))
         .map(r -> {
             Matcher m = idDelimiter.matcher(r);
             m.find();
@@ -25,16 +25,11 @@ boolean containsOnlyDuplicates(Long id) {
     int len = idDigits.length();
     if (len % 2 != 0) return false;
 
-    int half = len / 2;
-
-    String first = idDigits.substring(0, half);
-    String last = idDigits.substring(half, len);
-
-    return first.equals(last);
+    return idDigits.substring(0, len/2).equals(idDigits.substring(len/2, len));
 }
 
 void main() throws IOException {
-    long total = ranges()
+    var total = ranges()
         .flatMap(r -> expand(r).filter(i -> containsOnlyDuplicates(i)))
         .reduce((sum, i) -> sum + i).orElseThrow();
 
