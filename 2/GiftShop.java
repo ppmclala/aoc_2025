@@ -14,12 +14,12 @@ Pattern ngramPattern(int n) {
 
 Stream<IdRange> ranges() throws IOException {
     return rangeDelimiter
-    .splitAsStream(Files.readString(Path.of("input.txt")))
-    .map(r -> {
-        Matcher m = idDelimiter.matcher(r);
-        m.find();
-        return new IdRange(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)));
-    });
+        .splitAsStream(Files.readString(Path.of("input.txt")))
+        .map(r -> {
+            Matcher m = idDelimiter.matcher(r);
+            m.find();
+            return new IdRange(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)));
+        });
 }
 
 Stream<Long> expand(IdRange range) {
