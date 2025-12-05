@@ -1,20 +1,14 @@
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.regex.Pattern;
 
 record IdRange(long start, long end) { }
 
 Pattern rangeDelimiter = Pattern.compile(",");
 Pattern idDelimiter = Pattern.compile("([0-9]+)-([0-9]+)");
-Map<Integer, Pattern> ngramPatterns = new HashMap<>();
-
-Pattern ngramPattern(int n) {
-    return ngramPatterns.getOrDefault(n, Pattern.compile("\\d{%d}".formatted(n)));
-}
 
 Stream<IdRange> ranges() throws IOException {
     return rangeDelimiter
-        .splitAsStream(Files.readString(Path.of("input.txt")))
+        .splitAsStream(Files.readString(Path.of("sample.txt")))
         .map(r -> {
             Matcher m = idDelimiter.matcher(r);
             m.find();
@@ -29,28 +23,14 @@ Stream<Long> expand(IdRange range) {
 boolean containsOnlyDuplicates(Long id) {
     String idDigits = id.toString();
     int len = idDigits.length();
+    if (len % 2 != 0) return false;
+
     int half = len / 2;
 
-    for(int n = 1; n <= half; n++) {
-        Matcher ngramMatcher = ngramPattern(n).matcher(idDigits);
-        Map<String, Integer> ngrams = new HashMap<>();
+    String first = idDigits.substring(0, half);
+    String last = idDigits.substring(half, len);
 
-        while (ngramMatcher.find()) {
-            ngrams.merge(ngramMatcher.group(), 1, Integer::sum);
-        }
-
-        int totalLength = ngrams
-            .entrySet()
-            .stream()
-            .map(e -> e.getKey().length() * e.getValue())
-            .reduce((sum, ng) -> sum + ng).orElseThrow();
-
-        if (totalLength == len && ngrams.size() == 1 && (Integer) ngrams.values().toArray()[0] == 2) {
-            return true;
-        }
-    }
-
-    return false;
+    return first.equals(last);
 }
 
 void main() throws IOException {
