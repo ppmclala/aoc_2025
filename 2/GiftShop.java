@@ -2,10 +2,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-static record IdRange(long start, long end) { }
+record IdRange(long start, long end) { }
 
 Pattern rangeDelimiter = Pattern.compile(",");
 Pattern idDelimiter = Pattern.compile("([0-9]+)-([0-9]+)");
+Map<Integer, Pattern> ngramPatterns = new HashMap<>();
+
+Pattern ngramPattern(int n) {
+    return ngramPatterns.getOrDefault(n, Pattern.compile("\\d{%d}".formatted(n)));
+}
 
 Stream<IdRange> ranges() throws IOException {
     return rangeDelimiter
@@ -18,18 +23,16 @@ Stream<IdRange> ranges() throws IOException {
 }
 
 Stream<Long> expand(IdRange range) {
-    return LongStream
-        .rangeClosed(range.start(), range.end())
-        .boxed();
+    return LongStream.rangeClosed(range.start(), range.end()).boxed();
 }
 
 boolean containsOnlyDuplicates(Long id) {
     String idDigits = id.toString();
     int len = idDigits.length();
-    int half = (len / 2);
+    int half = len / 2;
 
     for(int n = 1; n <= half; n++) {
-        Matcher ngramMatcher = Pattern.compile("\\d{%d}".formatted(n)).matcher(idDigits);
+        Matcher ngramMatcher = ngramPattern(n).matcher(idDigits);
         Map<String, Integer> ngrams = new HashMap<>();
 
         while (ngramMatcher.find()) {
