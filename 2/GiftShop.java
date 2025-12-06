@@ -1,7 +1,3 @@
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.regex.Pattern;
-
 record IdRange(long start, long end) { }
 
 Pattern rangeDelimiter = Pattern.compile(",");
@@ -10,16 +6,6 @@ Map<Integer, Pattern> ngramPatterns = new HashMap<>();
 
 Pattern ngramPattern(int n) {
     return ngramPatterns.getOrDefault(n, Pattern.compile("\\d{%d}".formatted(n)));
-}
-
-Stream<IdRange> ranges() throws IOException {
-    return rangeDelimiter
-        .splitAsStream(Files.readString(Path.of("input.txt")))
-        .map(r -> {
-            Matcher m = idDelimiter.matcher(r);
-            m.find();
-            return new IdRange(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)));
-        });
 }
 
 Stream<Long> expand(IdRange range) {
@@ -45,7 +31,7 @@ boolean containsOnlyDuplicates(Long id) {
             .map(e -> e.getKey().length() * e.getValue())
             .reduce((sum, ng) -> sum + ng).orElseThrow();
 
-        if (totalLength == len && ngrams.size() == 1 && (Integer) ngrams.values().toArray()[0] == 2) {
+        if (totalLength == len && ngrams.size() == 1) {
             return true;
         }
     }
@@ -53,8 +39,14 @@ boolean containsOnlyDuplicates(Long id) {
     return false;
 }
 
-void main() throws IOException {
-    long total = ranges()
+void main(String[] args) throws IOException {
+    long total = rangeDelimiter
+        .splitAsStream(Files.readString(Path.of(args[0])))
+        .map(r -> {
+            Matcher m = idDelimiter.matcher(r);
+            m.find();
+            return new IdRange(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)));
+        })
         .flatMap(r -> expand(r).filter(i -> containsOnlyDuplicates(i)))
         .reduce((sum, i) -> sum + i).orElseThrow();
 
