@@ -1,37 +1,64 @@
-import java.io.IOException;
-import java.util.regex.Pattern;
-
 record IdRange(long start, long end) { }
 
 Pattern rangeDelimiter = Pattern.compile(",");
 Pattern idDelimiter = Pattern.compile("([0-9]+)-([0-9]+)");
+Map<Integer, Pattern> ngramPatterns = new HashMap<>();
 
-Stream<IdRange> ranges() throws IOException {
-    return rangeDelimiter
-        .splitAsStream(Files.readString(Path.of("input.txt")))
-        .map(r -> {
-            Matcher m = idDelimiter.matcher(r);
-            m.find();
-            return new IdRange(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)));
-        });
+Pattern ngramPattern(int n) {
+    return ngramPatterns.getOrDefault(n, Pattern.compile("\\d{%d}".formatted(n)));
 }
 
 Stream<Long> expand(IdRange range) {
     return LongStream.rangeClosed(range.start(), range.end()).boxed();
 }
 
-boolean containsOnlyDuplicates(Long id) {
-    String idDigits = id.toString();
-    int len = idDigits.length();
-    if (len % 2 != 0) return false;
+static final Integer ANY = Integer.MAX_VALUE;
 
-    return idDigits.substring(0, len/2).equals(idDigits.substring(len/2, len));
+boolean hasRequiredNGrams(Integer numNgrams, Map<String, Integer> ngrams) {
+    if (numNgrams.equals(ANY)) return true;
+
+    return ngrams.values().toArray()[0] == numNgrams;
 }
 
-// part 2 was solved first accidentally.  solution starts @e4f7f6aa14f2dca124d76a3c40a478f8390d7e0c
-void main() throws IOException {
-    var total = ranges()
-        .flatMap(r -> expand(r).filter(i -> containsOnlyDuplicates(i)))
+boolean containsOnlyDuplicates(Long id, Integer numNgrams) {
+    String idDigits = id.toString();
+    int len = idDigits.length();
+    int half = len / 2;
+
+    for(int n = 1; n <= half; n++) {
+        Matcher ngramMatcher = ngramPattern(n).matcher(idDigits);
+        Map<String, Integer> ngrams = new HashMap<>();
+
+        while (ngramMatcher.find()) {
+            ngrams.merge(ngramMatcher.group(), 1, Integer::sum);
+        }
+
+        int totalLength = ngrams
+            .entrySet()
+            .stream()
+            .map(e -> e.getKey().length() * e.getValue())
+            .reduce((sum, ng) -> sum + ng).orElseThrow();
+
+        boolean singleNgramMatchesWholeId = totalLength == len && ngrams.size() == 1;
+        if (singleNgramMatchesWholeId && hasRequiredNGrams(numNgrams, ngrams)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void main(String[] args) throws IOException {
+    Integer numNgrams = (args.length >= 2 && !args[1].isBlank()) ? Integer.parseInt(args[1]) : ANY;
+
+    long total = rangeDelimiter
+        .splitAsStream(Files.readString(Path.of(args[0])))
+        .map(r -> {
+            Matcher m = idDelimiter.matcher(r);
+            m.find();
+            return new IdRange(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)));
+        })
+        .flatMap(r -> expand(r).filter(i -> containsOnlyDuplicates(i, numNgrams)))
         .reduce((sum, i) -> sum + i).orElseThrow();
 
     IO.println("Total of Invalid IDs: %d".formatted(total));
