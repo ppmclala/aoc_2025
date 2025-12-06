@@ -1,11 +1,5 @@
-import java.io.IOException;
-
-static Stream<Rotation> rotations() throws IOException {
-    return Files.readAllLines(Path.of("input.txt")).stream().map(l -> Rotation.of(l));
-}
-
-static final int START_POINT = 50;
-static final int MAX_POINT = 99;
+final int START_POINT = 50;
+final int MAX_POINT = 99;
 
 enum Dir { RIGHT, LEFT }
 
@@ -28,35 +22,63 @@ static class Rotation {
 
 class State {
     int pointer = 50;
-    int zeros;
+    int zeroes = 0;
 }
 
-int rotate(int pointer, Rotation rotation) {
+record RotationResult(int point, int zeroes) { }
+
+RotationResult rotate(int pointer, Rotation rotation) {
     return switch (rotation.dir) {
         case RIGHT -> {
+            int zs = rotation.count / 100;
             int c = rotation.count % 100;
             int s = 100 - pointer;
-            yield c >= s ? c - s : pointer + c;
+            int p;
+            if (c >= s) {
+                zs++;
+                p = c - s;
+            } else {
+                p = pointer + c;
+            }
+            IO.println("[%2d:R%2d] result: p = %d, zs = %d".formatted(pointer, rotation.count, p, zs));
+
+            yield new RotationResult(p, zs);
         }
         case LEFT -> {
+            int zs = rotation.count / 100;
             int c = rotation.count % 100;
-            yield c > pointer ? 100 - (c - pointer) : pointer - c;
+            int p;
+            if (c == pointer) {
+                p = 0;
+                if (pointer != 0) zs++;
+            } else if (c < pointer) {
+                p = pointer - c;
+            } else {
+                if (pointer != 0) zs++;
+                p = 100 - (c - pointer);
+            }
+
+            IO.println("[%2d:L%2d] result: p = %d, zs = %d".formatted(pointer, rotation.count, p, zs));
+
+            yield new RotationResult(p, zs);
         }
     };
 }
 
-void main() throws IOException {
+void main(String[] args) throws IOException {
     final State state = new State();
-    rotations().forEach(r -> {
+    Files.readAllLines(Path.of(args[0]))
+        .stream()
+        .map(l -> Rotation.of(l))
+        .forEach(r -> {
         var next = rotate(state.pointer, r);
-        System.out.printf("moved from %d to %d\n", state.pointer, next);
 
-        assert next <= MAX_POINT;
-        assert next >= 0;
+        assert next.point <= MAX_POINT;
+        assert next.point >= 0;
 
-        if (next == 0) state.zeros++;
-        state.pointer = next;
+        state.pointer = next.point;
+        state.zeroes += next.zeroes;
     });
 
-    System.out.printf("The password is: %d\n", state.zeros);
+    IO.println("The password is: %d [point = %d]\n".formatted(state.zeroes, state.pointer));
 }

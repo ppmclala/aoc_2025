@@ -1,7 +1,3 @@
-int maxDigit(String s) {
-    return s.chars().max().orElseThrow();
-}
-
 long calculateJoltage(String bank) {
     int maxPosition = Integer.MIN_VALUE;
     char max = Character.MIN_VALUE, prevMax = Character.MIN_VALUE;
@@ -19,10 +15,9 @@ long calculateJoltage(String bank) {
         secondMax = max;
         max = prevMax;
     } else {
-        secondMax = maxDigit(bank.substring(maxPosition + 1));
+        secondMax = bank.substring(maxPosition + 1).chars().max().orElseThrow();
     }
 
-    IO.println("%d:%d:%d".formatted(max-48, secondMax, (max-48) * 10 + (secondMax-48)));
     return (max-48) * 10 + (secondMax-48);
 }
 
