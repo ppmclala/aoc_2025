@@ -28,6 +28,7 @@ boolean containsOnlyDuplicates(Long id) {
     return idDigits.substring(0, len/2).equals(idDigits.substring(len/2, len));
 }
 
+// part 2 was solved first accidentally.  solution starts @e4f7f6aa14f2dca124d76a3c40a478f8390d7e0c
 void main() throws IOException {
     var total = ranges()
         .flatMap(r -> expand(r).filter(i -> containsOnlyDuplicates(i)))
