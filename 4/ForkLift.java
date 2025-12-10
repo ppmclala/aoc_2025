@@ -32,6 +32,23 @@ int neighbors(int x, int y, char[][] grid) {
     return n;
 }
 
+List<Pos> markAccessible(char[][] grid) {
+    List<Pos> accessibles = new ArrayList<>();
+    for (int y = 0; y < grid.length; ++y) {
+        for (int x = 0; x < grid[y].length; ++x) {
+            if (grid[x][y] == PAPER && neighbors(x, y, grid) < 4) {
+                accessibles.add(new Pos(x,y));
+            }
+        }
+    }
+
+    IO.println("Found %d reachable paper rolls!".formatted(accessibles.size()));
+
+    return accessibles;
+}
+
+record Pos(int x, int y) {}
+
 void main(String[] args) throws IOException {
     List<String> lines = Files.readAllLines(Path.of(args[0]));
     assert !lines.isEmpty() : "expected some lines";
@@ -44,16 +61,17 @@ void main(String[] args) throws IOException {
         }
     }
 
-    dumpGrid(grid);
-    int numRolls = 0;
-    for (int y = 0; y < grid.length; ++y) {
-        for (int x = 0; x < grid[y].length; ++x) {
-            if (grid[x][y] == PAPER && neighbors(x, y, grid) < 4) {
-                IO.println("accessible roll! (%d,%d)".formatted(x, y));
-                numRolls++;
-            }
-        }
-    }
 
-    IO.println("Found %d reachable paper rolls!".formatted(numRolls));
+    List<Pos> toRemove = null;
+    var totalRemoved = 0;
+    do {
+        dumpGrid(grid);
+        toRemove = markAccessible(grid);
+        totalRemoved += toRemove.size();
+        for (Pos p : toRemove) {
+            grid[p.x()][p.y()] = 'x';
+        }
+    } while (toRemove.size() > 0);
+
+    IO.println("Removed %d rolls".formatted(totalRemoved));
 }
