@@ -40,8 +40,8 @@ void validateAllFreshIngredients() {
     for (int i=1; i < allFreshIngredients.size(); ++i) {
         Range prev = allFreshIngredients.get(i-1), curr = allFreshIngredients.get(i);
         assert prev.end() < curr.start()  : "misaligned: prev:%s <-> curr:%s".formatted(prev, curr);
-        assert prev.start() <= prev.end() : "invalid ranage: %s".formatted(prev);
-        assert curr.start() <= curr.end() : "invalid ranage: %s".formatted(curr);
+        assert prev.start() <= prev.end() : "invalid range: %s".formatted(prev);
+        assert curr.start() <= curr.end() : "invalid range: %s".formatted(curr);
     }
 }
 
