@@ -1,11 +1,15 @@
-record Range(int start, int end) {}
+record Range(long start, long end) {}
 
 List<Range> ranges = new ArrayList<>();
-Set<Integer> ingredients = new HashSet<>();
+Set<Long> freshIngredients = new HashSet<>();
 
 void parseRange(String line) {
     String[] range = line.split("-");
-    ranges.add(new Range(Integer.parseInt(range[0]), Integer.parseInt(range[1])));
+    ranges.add(new Range(Long.parseLong(range[0]), Long.parseLong(range[1])));
+}
+
+boolean inAnyRange(Long ingredient) {
+    return ranges.stream().anyMatch(r -> ingredient >= r.start() && ingredient <= r.end());
 }
 
 void main(String[] args) throws IOException {
@@ -18,11 +22,11 @@ void main(String[] args) throws IOException {
         if (parsingRanges) {
             parseRange(line);
         } else {
-            ingredients.add(Integer.parseInt(line));
+            Long ingredient = Long.parseLong(line);
+            if (inAnyRange(ingredient)) freshIngredients.add(ingredient);
         }
     }
 
-    IO.println(ranges);
-    IO.println(ingredients);
+    IO.println("freshIngredients: %d".formatted(freshIngredients.size()));
 }
 
