@@ -1,8 +1,10 @@
-record Problem(List<Long> vals, char op) {}
+static final char NONE = 'X';
 
+char[][] homework;
+record Problem(List<Long> vals, char op) {}
 List<Problem> problems = new ArrayList<>();
 
-long execOp(Problem p) {
+long solve(Problem p) {
     switch (p.op()) {
         case '*':
             return p.vals().stream().mapToLong(v -> v).reduce((product, v) -> product * v).orElseThrow();
@@ -12,9 +14,6 @@ long execOp(Problem p) {
             throw new UnsupportedOperationException("Unsupported op: [%c]".formatted(p.op()));
     }
 }
-
-record Pos(int x, int y) {}
-static final char NONE = 'X';
 
 void processDigits(List<Character> digits, List<Long> vals) {
     if (!digits.isEmpty()) {
@@ -26,9 +25,10 @@ void processDigits(List<Character> digits, List<Long> vals) {
     }
 }
 
-char[][] homework;
-
 void buildHomeworkMap(List<String> lines) {
+    assert !lines.isEmpty() : "expected lines to be non-empty";
+    assert lines.get(0) != null : "expected lines to be populated";
+
     homework = new char[lines.size()][lines.get(0).length()];
 
     for (int y=0; y<lines.size(); ++y) {
@@ -48,11 +48,7 @@ void buildHomeworkMap(List<String> lines) {
 }
 
 void main(String args[]) throws IOException {
-    IO.println("Using input: %s".formatted(args[0]));
     List<String> lines = Files.readAllLines(Path.of(args[0]));
-
-    assert !lines.isEmpty() : "expected lines to be non-empty";
-    assert lines.get(0) != null : "expected lines to be populated";
 
     buildHomeworkMap(lines);
 
@@ -76,14 +72,14 @@ void main(String args[]) throws IOException {
                     digits.add(homework[y][x]);
                 }
             } else if (++spaces == h) {
-                results.add(execOp(new Problem(vals, op)));
+                results.add(solve(new Problem(vals, op)));
                 op = NONE;
                 vals.clear();
             }
         }
     }
     processDigits(digits, vals);
-    results.add(execOp(new Problem(vals, op)));
+    results.add(solve(new Problem(vals, op)));
     var sumOfAllProblems = results.stream().mapToLong(r -> r).sum();
 
     IO.println("Sum of all problems: %d".formatted(sumOfAllProblems));
